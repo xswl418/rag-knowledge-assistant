@@ -1,0 +1,2 @@
+openai==2.52.0
+sentence-transformers==5.6.1
