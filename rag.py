@@ -1,3 +1,5 @@
+import time
+import json
 from pathlib import Path
 
 from openai import (
@@ -10,17 +12,23 @@ from openai import (
 from sentence_transformers import SentenceTransformer, util
 
 BASE_DIR = Path(__file__).resolve().parent
+LOG_PATH = BASE_DIR / "query_logs.jsonl"
 FILE_PATH = BASE_DIR / "knowledge_base.txt"
 
 SOURCE_NAME = "knowledge_base.txt"
 EMBEDDING_MODEL_NAME = "BAAI/bge-small-zh-v1.5"
 LLM_MODEL_NAME = "gpt-5.5"
 
-MAX_CHUNK_SIZE = 100
+MAX_CHUNK_SIZE = 200
 CHUNK_OVERLAP = 20
 TOP_K = 3
 MINIMUM_SCORE = 0.55
 
+def save_record(record, file_path):
+    line = json.dumps(record, ensure_ascii=False)
+
+    with open(file_path, "a", encoding="utf-8") as file:
+        file.write(line + "\n")
 
 def generate_answer(prompt, client, model_name):
     try:
@@ -189,35 +197,95 @@ def main():
 
     client = OpenAI()
 
-    question = input("请输入问题：")
+    available_tools = {
+        "search_knowledge": retrieve_top_k
+    }
 
-    results = retrieve_top_k(
-        question,
-        knowledge_chunks,
-        chunk_vectors,
-        model,
-        top_k=TOP_K,
-        minimum_score=MINIMUM_SCORE
-    )
+    while True:
+        question = input("请输入问题：").strip()
 
-    if len(results) > 0:
-        prompt = build_prompt(question, results)
+        if question == "exit":
+            break
 
-        print("\n发送给大模型的完整指令：")
-        print(prompt)
+        if question == "":
+            print("问题不能为空")
+            continue
+        question_start = time.perf_counter()
 
-        answer = generate_answer(
-            prompt,
-            client,
-            LLM_MODEL_NAME
+        generation_seconds = None
+
+        print("本次收到的问题：", question)
+
+        retrieval_start = time.perf_counter()
+
+        tool_request = {
+            "name": "search_knowledge",
+            "arguments": {
+                "question": question
+            }
+        }
+
+        tool_name = tool_request["name"]
+        tool_arguments = tool_request["arguments"]
+
+        search_tool = available_tools[tool_name]
+
+        results = search_tool(
+            **tool_arguments,
+            chunks=knowledge_chunks,
+            vectors=chunk_vectors,
+            model=model,
+            top_k=TOP_K,
+            minimum_score=MINIMUM_SCORE
         )
 
-        if answer is not None:
-            print("\n大模型回答：")
-            print(answer)
+        retrieval_seconds = time.perf_counter() - retrieval_start
+        print(f"检索耗时：{retrieval_seconds:.3f}秒")
 
-    else:
-        print("没有找到足够相关的内容")
+        if len(results) > 0:
+            prompt = build_prompt(question, results)
+
+            print("\n发送给大模型的完整指令：")
+            print(prompt)
+
+            generation_start = time.perf_counter()
+
+            answer = generate_answer(
+                prompt,
+                client,
+                LLM_MODEL_NAME
+            )
+
+            generation_seconds = time.perf_counter() - generation_start
+            print(f"生成接口调用耗时：{generation_seconds:.3f}秒")
+            if answer is not None and answer.strip() != "":
+                status = "answered"
+                print("\n大模型回答：")
+                print(answer)
+
+            else:
+                status = "no_answer"
+                print("本次未获得有效回答")
+
+        else:
+            status = "no_results"
+            print("没有找到足够相关的内容")
+
+        total_seconds = time.perf_counter() - question_start
+        print(f"本次问题总处理耗时：{total_seconds:.3f}秒")
+
+        record = {
+            "question": question,
+            "retrieved_count": len(results),
+            "retrieval_seconds": retrieval_seconds,
+            "generation_seconds": generation_seconds,
+            "total_seconds": total_seconds,
+            "status": status
+        }
+
+        print(record)
+
+        save_record(record, LOG_PATH)
 
 if __name__ == "__main__":
     main()

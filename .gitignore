@@ -5,3 +5,6 @@ __pycache__/
 .env
 .env.*
 !.env.example
+/query_logs.jsonl
+/query_logs_mock.jsonl
+/agent_logs.jsonl
