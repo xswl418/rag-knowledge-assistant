@@ -2,6 +2,9 @@ import rag
 import json
 import time
 
+from zipfile import BadZipFile
+from docx.opc.exceptions import PackageNotFoundError
+from pathlib import Path
 from openai import (
     OpenAI,
     APITimeoutError,
@@ -196,12 +199,54 @@ def run_agent(
 
     return record
 
-if __name__ == "__main__":
-    document = rag.load_document(rag.FILE_PATH)
+def load_user_document():
+    while True:
+        file_path_text = input("请输入TXT或DOCX文件的完整路径(按exit退出)：").strip().strip('"')
 
-    knowledge_chunks = rag.split_document(
-        document,
-        rag.SOURCE_NAME,
+        if file_path_text == "exit":
+            print("程序已退出")
+            raise SystemExit(0)
+
+        if file_path_text == "":
+            print("文件路径不能为空，请重新输入")
+            continue
+
+        file_path = Path(file_path_text)
+
+        if not file_path.is_file():
+            print("该路径不是现有文件，请检查后重新输入")
+            continue
+
+        if file_path.suffix.lower() not in(".txt", ".docx") :
+            print("目前只支持TXT和DOCX文件，请重新输入")
+            continue
+
+        try:
+            sections = rag.load_document_sections(file_path)
+        except UnicodeDecodeError:
+            print("文件无法按UTF-8解码，请选择UTF-8编码的TXT文件")
+            continue
+        except OSError:
+            print("文件读取失败，请检查文件是否存在，以及是否有读取权限")
+            continue
+        except (PackageNotFoundError, BadZipFile):
+            print("无法识别这个 Word 文件，请选择有效的 DOCX 文档")
+            continue
+
+        if "".join(sections).strip() == "":
+            print("没有读取到有效正文，请选择其他文件")
+            continue
+
+        return file_path, sections
+
+if __name__ == "__main__":
+    file_path, sections = load_user_document()
+
+    print("本次读取的文件：", file_path.name)
+
+    knowledge_chunks = rag.build_knowledge_chunks(
+        sections,
+        file_path.name,
         max_chunk_size=rag.MAX_CHUNK_SIZE,
         overlap=rag.CHUNK_OVERLAP
     )
@@ -244,5 +289,6 @@ if __name__ == "__main__":
             embedding_model
         )
 
+        record["source"] = file_path.name
         rag.save_record(record, AGENT_LOG_PATH)
         print("本次任务日志已保存")

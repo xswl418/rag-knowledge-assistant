@@ -1,6 +1,8 @@
 import time
 import json
+import re
 from pathlib import Path
+from docx import Document
 
 from openai import (
     OpenAI,
@@ -61,6 +63,63 @@ def load_document(file_path):
     with open(file_path, "r", encoding="utf-8") as file:
         return file.read()
 
+def load_docx_paragraph(file_path):
+    word_document = Document(file_path)
+    paragraphs = []
+
+    for paragraph in word_document.paragraphs:
+        text = paragraph.text.strip()
+
+        if text == "":
+            continue
+
+        item = {
+            "text": text,
+            "style": paragraph.style.name,
+        }
+        paragraphs.append(item)
+
+    return paragraphs
+
+def group_docx_sections(paragraphs):
+    sections = []
+    current_texts = []
+    has_heading = False
+
+    for item in paragraphs:
+        if item["style"] == "Heading 1":
+            if has_heading:
+                sections.append("\n".join(current_texts))
+                current_texts = []
+
+            has_heading = True
+
+        current_texts.append(item["text"])
+
+    if not has_heading:
+        return current_texts
+
+    last_section = "\n".join(current_texts)
+    if last_section != "":
+        sections.append(last_section)
+
+    return sections
+
+def load_document_sections(file_path):
+    file_path = Path(file_path)
+    suffix = file_path.suffix.lower()
+
+    if suffix == ".txt":
+        text = load_document(file_path)
+        return split_sections(text)
+
+    elif suffix == ".docx":
+        paragraphs = load_docx_paragraph(file_path)
+        return group_docx_sections(paragraphs)
+
+    else:
+        raise ValueError("目前只支持TXT和DOCX文件")
+
 def create_embeddings(chunks, model):
     chunk_texts = []
 
@@ -69,12 +128,115 @@ def create_embeddings(chunks, model):
 
     return model.encode(chunk_texts)
 
+def is_section_heading(line):
+    pattern = r"^[一二三四五六七八九十百]+、"
+    return re.match(pattern, line.strip()) is not None
+
+def split_sections(text):
+    sections = []
+    current_lines = []
+    has_heading = False
+
+    for line in text.splitlines():
+        if is_section_heading(line):
+            if has_heading:
+                sections.append("\n".join(current_lines).strip())
+                current_lines = []
+
+            has_heading = True
+
+        current_lines.append(line)
+
+    if not has_heading:
+        return text.split("\n\n")
+
+    last_section = "\n".join(current_lines).strip()
+    if last_section != "":
+        sections.append(last_section)
+
+    return sections
+
+def split_sentences(text):
+    sentences = []
+    current_sentence = ""
+
+    for character in text:
+        current_sentence += character
+
+        if character in "。！？":
+            sentences.append(current_sentence.strip())
+            current_sentence = ""
+
+    if current_sentence.strip() != "":
+        sentences.append(current_sentence.strip())
+
+    return sentences
+
+def build_sentence_chunks(text, max_chunk_size, overlap=0):
+    if max_chunk_size <= 0:
+        raise ValueError("知识块长度必须大于0")
+
+    if overlap < 0 or overlap >= max_chunk_size:
+        raise ValueError("重叠长度必须大于等于0，并且小于知识块长度")
+
+    sentences = split_sentences(text)
+    chunks = []
+    current_chunk = ""
+
+    for sentence in sentences:
+        if len(sentence) > max_chunk_size:
+            if current_chunk != "":
+                chunks.append(current_chunk)
+                current_chunk = ""
+
+            start = 0
+
+            while start < len(sentence):
+                end = start + max_chunk_size
+                chunks.append(sentence[start:end])
+
+                if end >= len(sentence):
+                    break
+
+                start = end - overlap
+
+            continue
+
+        if len(current_chunk) +len(sentence) > max_chunk_size:
+            chunks.append(current_chunk)
+
+            last_sentence = split_sentences(current_chunk)[-1]
+
+            if (
+                len(last_sentence) <= overlap
+                and len(last_sentence) + len(sentence) <= max_chunk_size
+            ):
+                current_chunk = last_sentence
+            else:
+                current_chunk = ""
+
+        current_chunk += sentence
+
+    if current_chunk != "":
+        chunks.append(current_chunk)
+
+    return chunks
+
 def split_document(text, source, max_chunk_size, overlap):
+    paragraphs = split_sections(text)
+
+    return build_knowledge_chunks(
+        paragraphs,
+        source,
+        max_chunk_size,
+        overlap
+    )
+
+def build_knowledge_chunks(paragraphs, source, max_chunk_size, overlap):
     if overlap >= max_chunk_size:
         print("重叠长度必须小于知识块长度")
         return []
 
-    paragraphs = text.split("\n\n")
     knowledge_chunks = []
     paragraph_id = 0
 
@@ -95,25 +257,21 @@ def split_document(text, source, max_chunk_size, overlap):
                 knowledge_chunks.append(chunk)
 
             else:
-                start = 0
-                step = max_chunk_size - overlap
+                chunk_texts = build_sentence_chunks(
+                    clean_paragraph,
+                    max_chunk_size,
+                    overlap
+                )
 
-                while start < len(clean_paragraph):
-                    end = start + max_chunk_size
+                for chunk_text in chunk_texts:
+                    chunk = {
+                        "chunk_id": len(knowledge_chunks) +1,
+                        "paragraph_id": paragraph_id,
+                        "source": source,
+                        "content": chunk_text
+                    }
 
-                    chunk_text = clean_paragraph[start:end].strip()
-
-                    if chunk_text != "":
-                        chunk = {
-                            "chunk_id": len(knowledge_chunks) + 1,
-                            "paragraph_id": paragraph_id,
-                            "source": source,
-                            "content": chunk_text
-                        }
-
-                        knowledge_chunks.append(chunk)
-
-                    start = start + step
+                    knowledge_chunks.append(chunk)
 
     return knowledge_chunks
 
