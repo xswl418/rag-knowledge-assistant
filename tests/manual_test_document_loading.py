@@ -1,4 +1,4 @@
-from manual_test_tool_execution import load_user_document
+from agent import load_user_document
 import rag
 
 
@@ -17,17 +17,9 @@ if __name__ == "__main__":
     # for chunk in test_chunks:
     #     print(len(chunk), chunk)
 
-    file_path, sections = load_user_document()
+    file_path, chunks = load_user_document()
 
     print("文件名：", file_path.name)
-    print("分组数量：", len(sections))
-
-    chunks = rag.build_knowledge_chunks(
-        sections,
-        file_path.name,
-        max_chunk_size=rag.MAX_CHUNK_SIZE,
-        overlap=rag.CHUNK_OVERLAP
-    )
 
     print("知识块数量：", len(chunks))
 
@@ -36,6 +28,9 @@ if __name__ == "__main__":
         print("所属段落编号:", chunk["paragraph_id"])
         print("字符数：", len(chunk["content"]))
         print("内容：", chunk["content"])
+
+        if "page_number" in chunk:
+            print("来源页码：", chunk["page_number"])
 
     # sections = rag.split_sections(document)
     #

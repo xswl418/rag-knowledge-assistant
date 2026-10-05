@@ -8,3 +8,4 @@ __pycache__/
 /query_logs.jsonl
 /query_logs_mock.jsonl
 /agent_logs.jsonl
+/logs/

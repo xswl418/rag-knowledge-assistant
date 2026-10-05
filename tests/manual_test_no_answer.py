@@ -1,8 +1,8 @@
-from analyze_logs import load_records
+from scripts.analyze_logs import load_records
 from unittest.mock import patch
 import rag
 
-TEST_LOG_PATH = rag.BASE_DIR / "query_logs_mock.jsonl"
+TEST_LOG_PATH = rag.BASE_DIR / "logs" / "query_logs_mock.jsonl"
 
 
 

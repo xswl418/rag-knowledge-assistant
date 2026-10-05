@@ -5,7 +5,7 @@ from unittest.mock import patch
 from openai import OpenAI
 
 import rag
-import manual_test_tool_execution as agent
+import agent
 
 
 QUESTION = "RAG 的检索相似度阈值应该设置为多少？"

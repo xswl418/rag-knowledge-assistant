@@ -3,6 +3,7 @@ import json
 import re
 from pathlib import Path
 from docx import Document
+from pypdf import PdfReader
 
 from openai import (
     OpenAI,
@@ -14,8 +15,8 @@ from openai import (
 from sentence_transformers import SentenceTransformer, util
 
 BASE_DIR = Path(__file__).resolve().parent
-LOG_PATH = BASE_DIR / "query_logs.jsonl"
-FILE_PATH = BASE_DIR / "knowledge_base.txt"
+LOG_PATH = BASE_DIR / "logs" / "query_logs.jsonl"
+FILE_PATH = BASE_DIR / "data" / "samples" / "knowledge_base.txt"
 
 SOURCE_NAME = "knowledge_base.txt"
 EMBEDDING_MODEL_NAME = "BAAI/bge-small-zh-v1.5"
@@ -27,6 +28,9 @@ TOP_K = 3
 MINIMUM_SCORE = 0.55
 
 def save_record(record, file_path):
+    file_path = Path(file_path)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+
     line = json.dumps(record, ensure_ascii=False)
 
     with open(file_path, "a", encoding="utf-8") as file:
@@ -80,6 +84,28 @@ def load_docx_paragraph(file_path):
         paragraphs.append(item)
 
     return paragraphs
+
+def load_pdf_pages(file_path):
+    reader = PdfReader(file_path)
+    pages = []
+
+    for page_number, page in enumerate(reader.pages, start=1):
+        text = page.extract_text().strip()
+
+        if text == "":
+            print(
+                f"第{page_number}页未提取到文字，已跳过；"
+                "请核对是否为空白页或图片页。"
+            )
+            continue
+
+        item = {
+            "page_number": page_number,
+            "text": text,
+        }
+        pages.append(item)
+
+    return pages
 
 def group_docx_sections(paragraphs):
     sections = []
@@ -275,6 +301,45 @@ def build_knowledge_chunks(paragraphs, source, max_chunk_size, overlap):
 
     return knowledge_chunks
 
+def build_pdf_chunks(pages, source, max_chunk_size, overlap):
+    knowledge_chunks = []
+
+    for item in pages:
+        page_chunks = split_document(
+            item["text"],
+            source,
+            max_chunk_size=max_chunk_size,
+            overlap=overlap,
+        )
+
+        for chunk in page_chunks:
+            chunk["chunk_id"] = len(knowledge_chunks) + 1
+            chunk["page_number"] = item["page_number"]
+            knowledge_chunks.append(chunk)
+
+    return knowledge_chunks
+
+def load_document_chunks(file_path, max_chunk_size, overlap):
+    file_path = Path(file_path)
+
+    if file_path.suffix.lower() == ".pdf":
+        pages = load_pdf_pages(file_path)
+
+        return build_pdf_chunks(
+            pages,
+            file_path.name,
+            max_chunk_size,
+            overlap
+        )
+
+    sections = load_document_sections(file_path)
+
+    return build_knowledge_chunks(
+        sections,
+        file_path.name,
+        max_chunk_size,
+        overlap
+    )
 
 def retrieve_top_k(question, chunks, vectors, model, top_k, minimum_score):
     question_vector = model.encode(question)

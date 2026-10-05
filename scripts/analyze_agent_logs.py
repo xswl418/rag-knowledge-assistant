@@ -1,8 +1,8 @@
 from pathlib import Path
-from analyze_logs import load_records
+from scripts.analyze_logs import load_records
 
-BASE_DIR = Path(__file__).resolve().parent
-LOG_PATH = BASE_DIR / "agent_logs.jsonl"
+BASE_DIR = Path(__file__).resolve().parent.parent
+LOG_PATH = BASE_DIR / "logs" / "agent_logs.jsonl"
 
 
 def main():

@@ -2,6 +2,7 @@ import rag
 import json
 import time
 
+from pypdf.errors import PdfReadError
 from zipfile import BadZipFile
 from docx.opc.exceptions import PackageNotFoundError
 from pathlib import Path
@@ -14,13 +15,13 @@ from openai import (
     APIStatusError
 )
 from sentence_transformers import SentenceTransformer
-from manual_test_tool_call import (
+from tools.manual_test_tool_call import (
     available_tools,
     validate_tool_request,
     tool_definitions
 )
 
-AGENT_LOG_PATH = rag.BASE_DIR / "agent_logs.jsonl"
+AGENT_LOG_PATH = rag.BASE_DIR / "logs" / "agent_logs.jsonl"
 
 def run_agent(
         question,
@@ -36,7 +37,8 @@ def run_agent(
             "content": (
                 "你是一个知识库助手。"
                 "对于知识性问题，先搜索知识库，再依据工具返回的资料回答。"
-                "资料不足时明确说明，不得编造；使用资料时注明来源文件和段落编号。"
+                "资料不足时明确说明，不得编造；使用资料时注明来源文件；有 page_number 时引用该页码。"
+                "没有时引用 paragraph_id 分组编号，不得编造来源位置。"
                 "对于简单问候或感谢，可以直接简短回复，不需要搜索知识库。"
             )
         },
@@ -164,8 +166,16 @@ def run_agent(
             print("检索结果数量：", len(results))
 
             for result in results:
-                print("来源：", result["chunk"]["source"])
-                print("内容：", result["chunk"]["content"])
+                chunk = result["chunk"]
+
+                print("来源：", chunk["source"])
+
+                if "page_number" in chunk:
+                    print("来源页码：", chunk["page_number"])
+                else:
+                    print("来源分组：", chunk["paragraph_id"])
+
+                print("内容：", chunk["content"])
                 print("相似度：", result["score"])
 
             if not results:
@@ -201,7 +211,7 @@ def run_agent(
 
 def load_user_document():
     while True:
-        file_path_text = input("请输入TXT或DOCX文件的完整路径(按exit退出)：").strip().strip('"')
+        file_path_text = input("请输入TXT、DOCX或PDF文件的完整路径(按exit退出)：").strip().strip('"')
 
         if file_path_text == "exit":
             print("程序已退出")
@@ -217,12 +227,17 @@ def load_user_document():
             print("该路径不是现有文件，请检查后重新输入")
             continue
 
-        if file_path.suffix.lower() not in(".txt", ".docx") :
-            print("目前只支持TXT和DOCX文件，请重新输入")
+        if file_path.suffix.lower() not in(".txt", ".docx", ".pdf") :
+            print("目前只支持TXT、DOCX和PDF文件，请重新输入")
             continue
 
         try:
-            sections = rag.load_document_sections(file_path)
+            knowledge_chunks = rag.load_document_chunks(
+                file_path,
+                max_chunk_size=rag.MAX_CHUNK_SIZE,
+                overlap=rag.CHUNK_OVERLAP
+            )
+
         except UnicodeDecodeError:
             print("文件无法按UTF-8解码，请选择UTF-8编码的TXT文件")
             continue
@@ -232,24 +247,20 @@ def load_user_document():
         except (PackageNotFoundError, BadZipFile):
             print("无法识别这个 Word 文件，请选择有效的 DOCX 文档")
             continue
-
-        if "".join(sections).strip() == "":
-            print("没有读取到有效正文，请选择其他文件")
+        except PdfReadError:
+            print("PDF读取失败，请选择有效且无需密码的PDF文件")
             continue
 
-        return file_path, sections
+        if not knowledge_chunks:
+            print("没有读取到可用文字，请检查文件内容")
+            continue
+
+        return file_path, knowledge_chunks
 
 if __name__ == "__main__":
-    file_path, sections = load_user_document()
+    file_path, knowledge_chunks = load_user_document()
 
     print("本次读取的文件：", file_path.name)
-
-    knowledge_chunks = rag.build_knowledge_chunks(
-        sections,
-        file_path.name,
-        max_chunk_size=rag.MAX_CHUNK_SIZE,
-        overlap=rag.CHUNK_OVERLAP
-    )
 
     print("知识块数量：", len(knowledge_chunks))
 

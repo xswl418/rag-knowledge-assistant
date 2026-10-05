@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
-LOG_PATH = BASE_DIR / "query_logs.jsonl"
+BASE_DIR = Path(__file__).resolve().parent.parent
+LOG_PATH = BASE_DIR / "logs" / "query_logs.jsonl"
 
 
 def load_records(file_path):

@@ -1,5 +1,5 @@
 from unittest.mock import Mock
-from manual_test_tool_execution import run_agent
+from agent import run_agent
 
 
 if __name__ == "__main__":

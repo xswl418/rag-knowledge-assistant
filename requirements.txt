@@ -1,3 +1,4 @@
 openai==2.52.0
 sentence-transformers==5.6.1
 python-docx==1.2.0
+pypdf==6.19.0

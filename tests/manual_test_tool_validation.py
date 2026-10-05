@@ -1,4 +1,4 @@
-from manual_test_tool_call import validate_tool_request
+from tools.manual_test_tool_call import validate_tool_request
 
 print("正常请求：")
 result = validate_tool_request(
