@@ -3,6 +3,8 @@
 上传一份文档，用自然语言查询条款、概括全文或提取指定字段，并回到来源核对结果。
 项目基于 Python、Streamlit 和支持工具调用的 Chat Completions 兼容接口，提供网页和命令行入口。
 
+在线体验：<https://rag-knowledge-assistant-kufyplzg5amhfd3sxyc5rt.streamlit.app/>
+
 ## 功能
 
 - **文档问答**：支持 UTF-8 TXT、DOCX 和文字型 PDF；本地向量检索返回相关片段，回答可附文件名、分组或 PDF 页码。
@@ -33,8 +35,14 @@ $env:OPENAI_API_KEY = "替换为应用使用的密钥"
 $env:OPENAI_BASE_URL = "https://your-provider.example/v1"
 ```
 
-将 `rag_assistant/rag.py` 的 `LLM_MODEL_NAME` 设置为服务商实际支持的模型名称。
-当前仓库配置值为 `gpt-6.1-sol`，不代表对第三方服务实际后端模型的独立验证。
+生成模型默认使用 `gpt-6.1-sol`。也可以通过 `LLM_MODEL_NAME` 环境变量覆盖为服务商实际支持的模型名称，
+无需修改源码；例如在云端 Secrets 中增加：
+
+```toml
+LLM_MODEL_NAME = "服务商提供的快速模型名称"
+```
+
+当前默认值不代表对第三方服务实际后端模型的独立验证。
 接口需支持工具调用和流式响应；普通文本请求成功不代表这两项能力均可用。
 
 应用同时读取上述两个变量，**不会自动加载 `.env` 文件**。不要把真实密钥写入源码或提交到 Git。
@@ -143,4 +151,4 @@ rag-knowledge-assistant/
 - [架构说明](docs/architecture.md)：请求链路、模块职责与数据路径。
 - [测试与评测](docs/testing.md)：离线回归与真实模型评测的区别。
 - [样例与来源](docs/sample_data.md)：测试文档用途和知识库参考来源。
-- [Community Cloud 部署](docs/community_cloud.md)：仓库入口、Secrets 配置和上线核验清单。云端运行尚未验收。
+- [Community Cloud 部署](docs/community_cloud.md)：仓库入口、Secrets 配置、冷启动说明和上线核验清单。

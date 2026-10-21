@@ -54,6 +54,35 @@ assert "sentence_transformers" not in sys.modules
             PROJECT_ROOT,
         )
 
+    def test_model_name_can_be_overridden_without_credentials(self):
+        environment = os.environ.copy()
+        for name in ("OPENAI_API_KEY", "OPENAI_BASE_URL"):
+            environment.pop(name, None)
+        environment["LLM_MODEL_NAME"] = "provider-fast-model"
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-I",
+                "-B",
+                "-c",
+                """
+import sys
+sys.path.insert(0, sys.argv[1])
+from rag_assistant import rag
+assert rag.LLM_MODEL_NAME == "provider-fast-model"
+""",
+                str(PROJECT_ROOT),
+            ],
+            cwd=PROJECT_ROOT,
+            env=environment,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=60,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_shared_paths_remain_at_repository_root(self):
         self.assertEqual(rag.BASE_DIR, PROJECT_ROOT)
         self.assertEqual(rag.FILE_PATH, PROJECT_ROOT / "data/samples/knowledge_base.txt")

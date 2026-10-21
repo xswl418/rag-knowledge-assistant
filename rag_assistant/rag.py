@@ -23,7 +23,10 @@ EMBEDDING_MODEL_NAME = os.environ.get(
     "EMBEDDING_MODEL_PATH",
     "BAAI/bge-small-zh-v1.5",
 )
-LLM_MODEL_NAME = "gpt-6.1-sol"
+LLM_MODEL_NAME = os.environ.get(
+    "LLM_MODEL_NAME",
+    "gpt-6.1-sol",
+)
 
 MAX_CHUNK_SIZE = 200
 CHUNK_OVERLAP = 20
