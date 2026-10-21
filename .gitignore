@@ -5,7 +5,10 @@ __pycache__/
 .env
 .env.*
 !.env.example
+.streamlit/secrets.toml
 /query_logs.jsonl
 /query_logs_mock.jsonl
 /agent_logs.jsonl
 /logs/
+.venv-deploy-check/
+/models/

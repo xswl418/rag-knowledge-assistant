@@ -1,0 +1,41 @@
+# 网页主题：冷白纸面、靛青主色、赭石资料标记。
+# 只使用系统内置中文字体，打开页面不需要外部字体服务。
+[theme]
+base = "light"
+primaryColor = "#2E5A7D"
+backgroundColor = "#F7F7F4"
+secondaryBackgroundColor = "#ECEEEA"
+textColor = "#1F2C33"
+linkColor = "#2E5A7D"
+borderColor = "#D9DDD8"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "10px"
+buttonRadius = "8px"
+font = '"Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", "Source Han Sans SC", "Hiragino Sans GB", sans-serif'
+baseFontSize = 16
+headingFontSizes = ["30px", "24px", "20px", "17px", "16px", "14px"]
+headingFontWeights = [600, 600, 600, 600, 500, 500]
+linkUnderline = false
+greenColor = "#2F6B4F"
+greenBackgroundColor = "#E4EFE7"
+greenTextColor = "#245741"
+orangeColor = "#A8713B"
+orangeBackgroundColor = "#F5EBDD"
+orangeTextColor = "#7E5429"
+redColor = "#B0433A"
+redBackgroundColor = "#F7E6E3"
+redTextColor = "#8E342D"
+grayColor = "#5E6B70"
+grayBackgroundColor = "#E8EBE7"
+grayTextColor = "#4B575C"
+codeBackgroundColor = "#ECEFEA"
+
+[theme.sidebar]
+backgroundColor = "#EEF0EC"
+secondaryBackgroundColor = "#E1E5E0"
+textColor = "#1F2C33"
+borderColor = "#D4D9D3"
+
+[client]
+toolbarMode = "viewer"

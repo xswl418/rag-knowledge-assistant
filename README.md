@@ -1,76 +1,21 @@
-# RAG 文档问答与工具调用 Agent
+# 文档问答与分析 Agent
 
-一个基于 Python 的命令行文档问答项目。支持导入本地 TXT、DOCX 和文字型 PDF 文件，使用本地向量模型检索文档，并通过大模型的工具调用请求完成“选择检索工具、执行检索、读取资料、生成回答”的流程。
+上传一份文档，用自然语言查询条款、概括全文或提取指定字段，并回到来源核对结果。
+项目基于 Python、Streamlit 和支持工具调用的 Chat Completions 兼容接口，提供网页和命令行入口。
 
-当前版本实现了文档读取、按标题分组、优先保留句子边界的切块、单工具 Agent 调用循环、连续独立提问、异常处理与任务日志。项目附带示例文档、手工测试脚本和小规模评测记录，尚未覆盖复杂文档解析及生产部署。
+## 功能
 
-## 当前功能
+- **文档问答**：支持 UTF-8 TXT、DOCX 和文字型 PDF；本地向量检索返回相关片段，回答可附文件名、分组或 PDF 页码。
+- **全文概括**：按全文可提取文字处理，长文分批生成后汇总，展示批次进度；超限或中途失败时明确提示，不把部分结果作为完整摘要。
+- **字段提取**：按指定字段逐批提取，校验原文引文并合并来源；未找到的字段标记缺失，不同候选值并列展示，不自动裁决。
+- **连续追问**：网页使用当前文档最近有限条成功问答理解指代；清空对话或切换文档会重置历史。
+- **流式与可追溯结果**：问答和概括支持流式展示，可展开检索资料；任务状态、调用次数、耗时等写入本地 JSONL 日志。
 
-- 用 `BAAI/bge-small-zh-v1.5` 生成向量，以余弦相似度、Top-K 和最低分数筛选资料。
-- 启动时指定一个本地文件：TXT 使用 UTF-8 解码，DOCX 使用 `python-docx` 提取正文段落和样式，PDF 使用 `pypdf` 逐页提取已有文字。
-- TXT 按“一、”“二、”等中文编号标题分组，无匹配标题时按空行分段；DOCX 按 `Heading 1` 样式分组，无该样式时保留非空正文段落。
-- 长段落按中文句末标点拆句并组合成块，单句超长时按字符切分；每块保留文件名、分组编号和知识块编号。
-- PDF 按页分别分组和切块，保留原始页序号供回答引用；未提取到文字的页面会提示并跳过，后续页码不会重新编号。
-- 模型通过 `search_knowledge` 请求检索，Python 校验工具名称和参数，执行函数并回传资料。
-- 工具请求的 JSON 或参数不合法时，将错误交回模型，允许其在调用上限内修正。
-- 每个问题最多尝试 3 次模型调用；每次响应只支持一条工具调用请求。
-- 支持简单问候直接回答、空回答处理，以及超时、连接、鉴权、限流和 HTTP 状态异常提示。
-- 输入 `exit` 退出；空输入得到提示；多个问题分别初始化消息、状态和计数。
-- 对空路径、文件不存在、不支持的扩展名、TXT 编码错误、没有可用文字及部分 DOCX、PDF 读取错误给出提示，并允许重新选择。
-- 将当前文件名、任务状态、模型调用次数、工具调用次数和总耗时保存为 JSONL，提供汇总脚本。
+网页仅在实际检索时准备向量资源。单独概括或提取不需要先加载向量模型，但仍需要生成模型接口。
 
-## 两个运行入口
+## 快速开始
 
-| 入口 | 用途 | 每次提问的流程 |
-| --- | --- | --- |
-| `agent.py` | 当前 Agent 命令行主入口 | 模型决定是否请求工具 → Python 执行并回传 → 模型继续处理或回答 |
-| `rag.py` | 基础 RAG 入口，同时提供共享函数 | 程序固定检索 → 构建提示词 → 调用模型回答 |
-
-Agent 入口读取启动时指定的 TXT、DOCX 或 PDF 文件；`rag.py` 入口仍读取项目内的 `data/samples/knowledge_base.txt`。两个入口都会加载本地向量模型并生成知识块向量，后续问题复用这些资源。
-
-文档处理与问答流程如下：
-
-```text
-选择本地 TXT / DOCX / PDF
-  → 提取正文与分组 → 切块 → 生成向量
-  → 输入问题 → 模型返回回答或工具请求
-  → Python 校验并执行检索 → 回传检索结果 → 模型继续处理
-  → 输出结果并记录任务日志
-```
-
-Agent 检索结果为空时，程序以 `no_results` 结束当前任务并等待新问题。此时通常已经调用模型来选择工具，但不会再请求模型生成答案。基础 RAG 入口则在检索无结果时完全跳过生成模型调用。
-
-这里的连续提问不包含跨问题聊天记忆。每个问题独立处理，不能依赖上一题理解“它”“刚才那个”等追问。
-
-## 项目结构
-
-```text
-rag-knowledge-assistant/
-  agent.py                    # Agent 主入口、文件选择与任务循环
-  rag.py                      # 文档解析、切块、检索及基础 RAG 入口
-  tools/
-    __init__.py
-    manual_test_tool_call.py   # 工具定义、函数映射、参数校验及调用示例
-  tests/                      # 文档加载、状态隔离及参数检查脚本
-    __init__.py
-    manual_test_*.py
-  scripts/                    # 日志汇总与受控评测脚本
-    __init__.py
-    analyze_logs.py
-    analyze_agent_logs.py
-    manual_eval_insufficient_context.py
-  data/samples/               # TXT、DOCX、PDF 示例资料
-  docs/                       # 历史评测与资料来源
-  logs/                       # 运行时创建，已忽略，不提交
-  requirements.txt
-  README.md
-```
-
-所有命令均从项目根目录执行。子目录中的脚本使用 `python -m 包名.模块名` 启动，使其能够导入根目录中的共享模块。使用 PyCharm 打开上层目录时，应将 `rag-knowledge-assistant` 标记为 Sources Root，并选择本项目的 `.venv` 解释器。
-
-## 安装与运行
-
-已验证的开发环境：Windows、Python 3.13.14。以下命令在项目目录的 PowerShell 中执行。
+以下命令从项目根目录执行，示例使用 Windows PowerShell。本地验证环境为 Windows、Python 3.13.14；其他操作系统仍需验证依赖与模型加载。
 
 ### 1. 安装依赖
 
@@ -79,134 +24,123 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-### 2. 首次下载向量模型
+### 2. 配置模型接口
 
-这一步需要能够访问模型下载服务；模型已缓存时可以跳过。运行入口使用 `local_files_only=True`，不会自动下载缺失模型。
+在启动应用的同一终端设置环境变量：
+
+```powershell
+$env:OPENAI_API_KEY = "替换为应用使用的密钥"
+$env:OPENAI_BASE_URL = "https://your-provider.example/v1"
+```
+
+将 `rag_assistant/rag.py` 的 `LLM_MODEL_NAME` 设置为服务商实际支持的模型名称。
+当前仓库配置值为 `gpt-6.1-sol`，不代表对第三方服务实际后端模型的独立验证。
+接口需支持工具调用和流式响应；普通文本请求成功不代表这两项能力均可用。
+
+应用同时读取上述两个变量，**不会自动加载 `.env` 文件**。不要把真实密钥写入源码或提交到 Git。
+
+### 3. 准备向量模型
+
+默认使用 `BAAI/bge-small-zh-v1.5`。首次使用时，可先下载到本地缓存：
 
 ```powershell
 .\.venv\Scripts\python.exe -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-small-zh-v1.5')"
 ```
 
-### 3. 配置生成模型
+这一步需要连接模型下载服务。已有缓存则不必重复执行。
+也可通过 `EMBEDDING_MODEL_PATH` 指定完整模型目录，或在网页启动前设置 `EMBEDDING_ALLOW_DOWNLOAD="true"` 允许网页按需下载；未设置时仅使用本地模型。
+命令行入口和评测脚本始终只读取本地模型。
 
-在运行环境中设置 `OPENAI_API_KEY`。使用 OpenAI 兼容服务时，还需设置与密钥配套的 `OPENAI_BASE_URL`，并将 `rag.py` 中的 `LLM_MODEL_NAME` 改为服务商支持的模型名称。
-
-Agent 要求接口支持 Chat Completions 的工具调用。配置名称不代表已独立核验服务商实际使用的后端模型。程序不会自动读取 `.env` 文件；不要把真实密钥写入代码或提交到仓库。
-
-### 4. 启动 Agent
-
-在项目目录运行：
+### 4. 启动网页
 
 ```powershell
-.\.venv\Scripts\python.exe -X utf8 -B agent.py
+.\.venv\Scripts\python.exe -m streamlit run web_app/app.py
 ```
 
-按提示输入 TXT、DOCX 或 PDF 文件路径。支持完整路径，以及相对于当前工作目录的路径；路径两侧的双引号会被去除。例如，在项目目录启动后可输入 `data/samples/library_guide.docx`，加载完成后提问：“每位读者最多能借几本书，借阅期限是多少？”
+打开终端显示的 Local URL。上传文档，待“文档已就绪”后提交问题，例如：
 
-输入 `data/samples/library_pages_test.pdf` 可以检查 PDF 页码：该示例第 2 页为空白页，借阅规则位于第 3 页，跳过空白页后仍以第 3 页作为来源。
+- 问答：“每位读者最多能借几本书，借阅期限是多少？”
+- 概括：“请概括这份文档的主要内容。”
+- 提取：“请提取借阅上限、借阅期限、续借次数和联系电话。”
 
-文件选择和提问阶段均可输入小写 `exit` 退出。每次运行加载一个文件，更换文件需重新启动程序。
+可直接使用 `data/samples/library_guide.txt` 体验。样例为虚构资料，不代表真实机构规定。
+回答下方可展开检索资料并核对来源；检索返回的内容不一定全部被模型实际引用。
 
-基础 RAG 的运行命令为：
+Windows 也可双击根目录的 `start_web.bat`，它使用项目 `.venv` 启动同一网页。
+通过环境变量配置时，请在已经设置变量的终端运行启动器；单独双击不会继承另一个终端临时设置的变量。
+本地服务运行期间需保持启动窗口开启，关闭服务后仅打开网址不会自动启动应用。
+
+## 配置与限制
+
+| 配置位置 | 默认值或行为 |
+| --- | --- |
+| `OPENAI_API_KEY` / `OPENAI_BASE_URL` | 必填；需为同一服务配套的密钥与接口地址 |
+| `EMBEDDING_MODEL_PATH` | `BAAI/bge-small-zh-v1.5`，也可设置完整本地模型目录 |
+| `EMBEDDING_ALLOW_DOWNLOAD` | 默认 `false`；设为 `true` 允许网页下载模型，修改后需重启应用 |
+| `rag_assistant/rag.py` | 切块 200 字符、重叠上限 20、Top-K 3、最低相似度 0.53 |
+| `rag_assistant/conversation.py` | 从最近 5 条任务记录中选择成功问答作为网页历史；不按 token 截断 |
+| `rag_assistant/document_task.py` | 每批最多 12000 字符（含来源标记），最多 10 批 |
+| `rag_assistant/api_client.py` | 请求超时 120 秒、SDK 自动重试 0 次；不是整项任务的总时限 |
+
+一次任务最多执行 3 次检索、4 次外层模型请求，含工具内部请求的总上限为 15 次。
+首次检索为空时允许模型改写查询；第三次仍为空则停止。预算或接口异常也可能提前终止任务。
+概括与提取会先检查完整计划所需预算，不会为了完成而静默截掉后续批次。
+
+- 一次处理一份文档；尚不支持 OCR、跨文档联合检索或持久化向量库。
+- DOCX 主要读取正文段落与标题样式；PDF 读取已有文字层，扫描件、复杂排版、表格及图像内容不在可靠解析范围内。
+- 向量阈值和切块参数不是通用最优值。检索可能漏掉依据或带入无关片段，生成内容仍需核对。
+- 会话保存在内存中，刷新或重启可能丢失；本地日志不会自动恢复为页面历史。
+- 当前没有项目级登录、访问控制或调用配额管理，部署后应核对平台可见性和费用风险。
+
+## 数据与隐私
+
+向量计算在应用运行机器上完成。处理任务时，问题、有限历史及选中的文档内容会发往配置的生成模型服务；概括和提取可能逐批发送全文。
+请只上传有权处理的资料，并先确认服务商的数据处理政策。
+
+`logs/` 可能包含问题、完整回答和原文片段，不是匿名统计。密钥、日志、虚拟环境和本地模型目录均被 Git 忽略；云端实例本地日志不作为长期存储。
+
+## 其他入口
 
 ```powershell
-.\.venv\Scripts\python.exe -X utf8 -B rag.py
+# 命令行 Agent：按提示选择一个 TXT、DOCX 或 PDF，输入 exit 退出
+.\.venv\Scripts\python.exe -m rag_assistant.agent
+
+# 基础 RAG：固定读取 data/samples/knowledge_base.txt
+.\.venv\Scripts\python.exe -m rag_assistant.rag
+
+# 接口连通性检查：会产生一次真实模型请求
+.\.venv\Scripts\python.exe -m rag_assistant.api_client
+
+# 离线自动化测试：不请求模型、不下载权重
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-## 示例文档与切块参数
+命令行 Agent 每个问题独立处理，不传网页会话历史。
+批量评测会产生真实模型请求，运行与人工复核方法见 [测试与评测](docs/testing.md)。
 
-以下文件均位于 `data/samples/`：
+## 项目结构
 
-| 文件 | 内容 | 默认配置下的知识块数量 |
-| --- | --- | --- |
-| `knowledge_base.txt` | 14 段 AI、RAG、工具调用及评测基础材料 | 14 |
-| `library_rules.txt` | 书屋开放、借阅与续借规则 | 3 |
-| `library_guide.txt` | 包含中文编号标题的书屋使用指南 | 4 |
-| `library_guide.docx` | 包含标题样式的简短 Word 示例 | 2 |
-| `library_guide.pdf` | 简短书屋指南的单页文字型 PDF | 1 |
-| `library_pages_test.docx` | 分页测试使用的 Word 原文 | 2 |
-| `library_pages_test.pdf` | 共 3 页，第 2 页空白，用于检查跳页后的来源页码 | 2 |
-
-书屋资料用于功能验证，不代表真实机构规则。TXT 与 DOCX 指南的内容和篇幅不同，并非同一文档的格式转换版本。
-
-参数集中在 `rag.py`：
-
-| 参数 | 当前值 | 含义 |
-| --- | --- | --- |
-| `MAX_CHUNK_SIZE` | `200` | 每块最多 200 个 Python 字符，不是 200 个 token |
-| `CHUNK_OVERLAP` | `20` | 整句重叠的长度上限；单句超长时使用的重叠字符数 |
-| `TOP_K` | `3` | 最多返回 3 个知识块 |
-| `MINIMUM_SCORE` | `0.55` | 返回结果的最低余弦相似度 |
-
-分组超过块长时，程序优先在 `。！？` 处拆句，再将完整句子组合成块。上一块的末句不超过重叠上限、且加入下一块后不超长时，才保留该整句作为重叠内容；因此，相邻块不保证都有 20 个字符的重叠。单句本身超过块长时，退回字符切分。
-
-`paragraph_id` 表示程序处理后的分组序号，不是 Word 原始段落号或页码。PDF 中该编号每页重新计数，`chunk_id` 则在整份文件中连续编号；`page_number` 是从 1 开始的 PDF 页面顺序，不一定等于正文印刷页码。Agent 提示模型对 PDF 使用页码引用，对 TXT、DOCX 使用分组编号引用。标题不会自动复制到同一组的后续知识块。
-
-这些配置是当前开发基线，不是通用最佳值。`TOP_K=3` 表示最多返回 3 块，低于阈值的候选仍会被过滤。
-
-已知检索局限：在 `library_guide.txt` 上询问“小组讨论区需要提前多久预约、最多使用多长时间、迟到二十分钟会怎样”时，曾仅检索到迟到处理条款，预约时间与使用时长所在块被 `0.55` 阈值过滤。当前保留这一配置和失败案例，后续需通过多类问题比较检索覆盖情况，而非根据单题结果确定参数。
-
-`knowledge_base.txt` 的补充材料来源见 [知识库补充材料](docs/knowledge_expansion_v1.md)。运行时不会自动返回原始网页链接或 Word 页码。
-
-## 测试与日志
-
-文档加载脚本用于人工检查分组、块长和内容，不加载向量模型，也不请求生成接口：
-
-```powershell
-.\.venv\Scripts\python.exe -X utf8 -B -m tests.manual_test_document_loading
-.\.venv\Scripts\python.exe -X utf8 -B -m tests.manual_test_docx_loading
-.\.venv\Scripts\python.exe -X utf8 -B -m tests.manual_test_pdf_loading
+```text
+rag-knowledge-assistant/
+├── rag_assistant/        # Agent、文档处理、检索、工具及共享客户端
+├── web_app/              # Streamlit 入口及本地静态资源
+├── scripts/              # 批量评测、日志分析和接口诊断
+├── tests/                # 离线自动化测试及手动检查
+├── data/                 # 评测用例和虚构样例文档
+├── docs/                 # 架构、测试、数据来源和部署说明
+├── .streamlit/           # 网页主题配置
+├── requirements.txt
+├── start_web.bat
+├── CHANGELOG.md
+└── README.md
 ```
 
-通用加载脚本支持三种格式，复用 Agent 的输入校验和重新选择流程；DOCX 脚本保留 TXT、DOCX 的直接解析示例；PDF 脚本打印知识块编号、来源页码和内容。文件路径示例：`data/samples/library_pages_test.pdf`。
+旧版根目录模块已整理到 `rag_assistant/`，命令行改用 `python -m rag_assistant.agent`；
+网页入口和样例位置保持不变。
 
-以下脚本分别检查不同问题之间的状态隔离和工具参数校验，不请求真实生成接口，也不加载向量模型。状态隔离脚本带有断言，参数校验脚本需要人工对照输出：
-
-```powershell
-.\.venv\Scripts\python.exe -X utf8 -B -m tests.manual_test_agent_state
-.\.venv\Scripts\python.exe -X utf8 -B -m tests.manual_test_tool_validation
-```
-
-基础 RAG 的空回答测试需要已缓存的向量模型，但生成回答使用模拟结果，只写入独立的测试日志：
-
-```powershell
-.\.venv\Scripts\python.exe -X utf8 -B -m tests.manual_test_no_answer
-```
-
-`tools/manual_test_tool_call.py` 和 `scripts/manual_eval_insufficient_context.py` 会调用真实模型，可能产生费用，不属于上述离线回归测试。运行时分别使用 `-m tools.manual_test_tool_call` 和 `-m scripts.manual_eval_insufficient_context`。后者保留了旧版严格知识库回答标准，用于历史对照，不代表未来的通用知识补充策略。
-
-实际运行并生成日志后，可以查看汇总：
-
-```powershell
-.\.venv\Scripts\python.exe -X utf8 -B -m scripts.analyze_agent_logs
-.\.venv\Scripts\python.exe -X utf8 -B -m scripts.analyze_logs
-```
-
-两个脚本分别读取 `logs/agent_logs.jsonl` 和 `logs/query_logs.jsonl`。保存首条记录时会自动创建日志目录；空回答测试使用 `logs/query_logs_mock.jsonl`。日志尚不存在时，请先运行对应入口；汇总脚本目前不处理缺失或损坏的日志文件。`logs/` 已加入 `.gitignore`，不会随项目上传。
-
-`answered` 只表示获得非空白回答，不代表答案正确。模型调用次数记录程序尝试发出的请求，包含失败尝试，不等于服务商计费次数。Agent 客户端设置 30 秒超时并关闭 SDK 自动重试。
-
-Agent 日志的 `source` 表示当前加载的文件，不代表该问题一定执行过检索。已有验证包含 7 个示例文件的读取与切块、PDF 空白页跳过和原始页序号保留、状态隔离、工具参数校验，以及人工端到端问答检查；尚无覆盖多类真实文档的系统评测结果。
-
-## 当前边界与后续方向
-
-- 当前支持单个本地 UTF-8 TXT、DOCX 或文字型 PDF 文件，尚不支持旧版 `.doc`、扫描件 OCR、网页上传或多文件联合检索。
-- 知识库与向量保存在内存中；修改资料后需重启，重启时重新生成向量。
-- TXT 标题识别依赖有限的中文编号规则，编号列表可能被当作标题；DOCX 仅识别 `Heading 1` 分组，不根据字号、加粗或视觉排版推断标题。
-- DOCX 当前只提取正文段落，不提取表格、文本框、页眉页脚或图片文字。部分无效 DOCX 有错误提示，但未覆盖所有损坏文件类型。
-- PDF 依赖文件中已有的文字层，不识别图片文字，不还原复杂表格和多栏版式；按页分别处理，不合并跨页句子。没有提取到文字不一定代表该页是扫描件，需核对原文件。当前不提供密码输入或解密流程，也未覆盖所有 PDF 读取异常。
-- 分句仅处理指定的中文句末标点，单句过长时仍可能被截断；当前块长与阈值不适合所有文档。
-- 模型可以在一次任务内重复调用同一个检索工具，但尚未支持多工具协作或同轮多条工具请求。
-- 引用和“依据资料回答”依赖模型表现，尚无自动事实核验；已有开发用例不能推断真实场景准确率。
-- 当前运行策略在检索为空时停止。允许明确标注的通用知识补充已列入产品讨论，尚未完整实现。
-- 暂无流式输出、跨问题记忆、Web 服务或多用户资料管理。
-
-后续方向包括可拖拽文件的上传问答界面、对外部署、全文概括与关键信息提取，以及基于固定问题集的检索与回答质量评测。复杂版式、表格和扫描件解析将单独扩展。
-
-## 开发记录
-
-- [首批 RAG 评测记录（4 段知识库，历史版本）](docs/evaluation_v1.md)
-- [Agent 资料不足评测及产品规则讨论](docs/agent_evaluation_v1.md)
-- [知识库补充正文与来源](docs/knowledge_expansion_v1.md)
-
-上述文档保留各自整理时的条件、结果和待办。知识库扩充状态及当前参数以本 README 和代码为准，历史记录不代表当前版本的完整评测。
+- [开发演进](CHANGELOG.md)：历史提交、功能变化与验证边界。
+- [设计与验证记录](docs/development.md)：近期迭代的问题、方案、修复和验证依据。
+- [架构说明](docs/architecture.md)：请求链路、模块职责与数据路径。
+- [测试与评测](docs/testing.md)：离线回归与真实模型评测的区别。
+- [样例与来源](docs/sample_data.md)：测试文档用途和知识库参考来源。
+- [Community Cloud 部署](docs/community_cloud.md)：仓库入口、Secrets 配置和上线核验清单。云端运行尚未验收。

@@ -1,31 +1,34 @@
 import time
 import json
 import re
+import os
+
 from pathlib import Path
 from docx import Document
 from pypdf import PdfReader
 
 from openai import (
-    OpenAI,
     APIConnectionError,
     AuthenticationError,
     RateLimitError
 )
+from rag_assistant.api_client import create_api_client
 
-from sentence_transformers import SentenceTransformer, util
-
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parents[1]
 LOG_PATH = BASE_DIR / "logs" / "query_logs.jsonl"
 FILE_PATH = BASE_DIR / "data" / "samples" / "knowledge_base.txt"
 
 SOURCE_NAME = "knowledge_base.txt"
-EMBEDDING_MODEL_NAME = "BAAI/bge-small-zh-v1.5"
-LLM_MODEL_NAME = "gpt-5.5"
+EMBEDDING_MODEL_NAME = os.environ.get(
+    "EMBEDDING_MODEL_PATH",
+    "BAAI/bge-small-zh-v1.5",
+)
+LLM_MODEL_NAME = "gpt-6.1-sol"
 
 MAX_CHUNK_SIZE = 200
 CHUNK_OVERLAP = 20
 TOP_K = 3
-MINIMUM_SCORE = 0.55
+MINIMUM_SCORE = 0.53
 
 def save_record(record, file_path):
     file_path = Path(file_path)
@@ -152,7 +155,12 @@ def create_embeddings(chunks, model):
     for chunk in chunks:
         chunk_texts.append(chunk["content"])
 
-    return model.encode(chunk_texts)
+    encode_start = time.perf_counter()
+    chunk_vectors = model.encode(chunk_texts)
+    encode_seconds = time.perf_counter() - encode_start
+    print(f"文档向量计算耗时：{encode_seconds:.3f}秒")
+
+    return chunk_vectors
 
 def is_section_heading(line):
     pattern = r"^[一二三四五六七八九十百]+、"
@@ -342,7 +350,15 @@ def load_document_chunks(file_path, max_chunk_size, overlap):
     )
 
 def retrieve_top_k(question, chunks, vectors, model, top_k, minimum_score):
+    from sentence_transformers import SentenceTransformer, util
+
+    question_encode_start = time.perf_counter()
     question_vector = model.encode(question)
+    question_encode_seconds = time.perf_counter() - question_encode_start
+
+    print(f"问题向量计算耗时{question_encode_seconds:.3f}秒")
+
+    search_start = time.perf_counter()
     scores = util.cos_sim(question_vector, vectors)[0]
 
     scored_chunks = []
@@ -364,6 +380,9 @@ def retrieve_top_k(question, chunks, vectors, model, top_k, minimum_score):
     for item in scored_chunks[:top_k]:
         if item["score"]>=minimum_score:
             results.append(item)
+
+    search_seconds = time.perf_counter() - search_start
+    print(f"相似度计算与筛选耗时：{search_seconds:.3f}秒")
 
     return results
 
@@ -399,6 +418,7 @@ def build_prompt(question, retrieved_results):
     return prompt
 
 def main():
+    from sentence_transformers import SentenceTransformer, util
     document = load_document(FILE_PATH)
 
     knowledge_chunks = split_document(
@@ -418,7 +438,7 @@ def main():
         model
     )
 
-    client = OpenAI()
+    client = create_api_client()
 
     available_tools = {
         "search_knowledge": retrieve_top_k

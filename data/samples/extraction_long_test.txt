@@ -1,0 +1,130 @@
+长文提取合成样例
+本文件为人工构造的流程测试资料，不是真实业务规定。
+一、资料甲
+借阅上限：3本。
+借阅期限：12天。
+
+二、档案目录
+Catalog entry 001: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 002: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 003: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 004: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 005: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 006: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 007: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 008: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 009: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 010: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 011: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 012: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 013: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 014: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 015: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 016: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 017: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 018: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 019: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 020: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 021: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 022: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 023: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 024: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 025: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 026: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 027: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 028: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 029: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 030: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 031: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 032: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 033: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 034: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 035: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 036: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 037: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 038: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 039: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 040: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 041: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 042: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 043: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 044: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 045: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 046: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 047: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 048: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 049: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 050: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 051: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 052: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 053: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 054: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 055: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 056: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 057: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 058: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 059: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+Catalog entry 060: The archive contains a shelf map, a reading room sketch, an inventory note, a cover description, and a storage label. These catalog descriptions concern the physical arrangement of archived materials and contain no lending policy.
+
+三、资料乙
+借阅上限：5本。
+借阅期限：12天。

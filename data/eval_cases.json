@@ -1,0 +1,146 @@
+[
+  {
+    "id": "D01",
+    "document": "data/samples/library_guide.txt",
+    "task_type": "qa",
+    "question": "我借的书还没到期，但已经被其他读者预约了，还能续借吗？",
+    "expected_points": [
+      "不能",
+      "已经被其他读者预约的图书不能续借"
+    ]
+  },
+  {
+  "id": "D02",
+  "document": "data/samples/library_guide.txt",
+  "task_type": "qa",
+  "question": "书屋的联系电话是多少？",
+  "expected_points": [
+    "文档没有提供书屋的联系电话",
+    "回答不能编造书屋的联系电话"
+  ]
+  },
+  {
+  "id": "D03",
+  "document": "data/samples/library_guide.txt",
+  "task_type": "qa",
+  "question": "我们7个人，不提前登记，想使用小组讨论区3小时，符合规定吗？",
+  "expected_points": [
+    "不符合规定，因为每组最多六个人",
+    "小组讨论区需要提前一天登记",
+    "每次使用时间不超过两小时"
+  ]
+},
+  {
+  "id": "D04",
+  "document": "data/samples/library_guide.txt",
+  "task_type": "qa",
+  "question": "周六能按正常开放时间去书屋领取闭馆后遗留的普通物品吗？领取时有哪些要求？这些物品会暂存多久？",
+  "expected_points": [
+    "周末暂不开放，按正常开放安排周六不能前往领取",
+    "领取时需要说明物品特征并出示学生证",
+    "闭馆后遗留的普通物品暂存七天"
+  ]
+},
+  {
+  "id": "D05",
+  "document": "data/samples/library_guide.txt",
+  "task_type": "qa",
+  "history_messages": [
+    {
+      "role": "user",
+      "content": "周六能按正常开放时间去书屋领取闭馆后遗留的普通物品吗？领取时有哪些要求？这些物品会暂存多久？"
+    },
+    {
+      "role": "assistant",
+      "content": "按正常开放安排，周六不能前往领取，因为周末暂不开放。领取普通遗留物品时，需要说明物品特征并出示学生证。这些物品会暂存七天。"
+    }
+  ],
+  "question": "那超过这个期限后会怎么处理？",
+  "expected_points": [
+    "理解这个期限指普通遗留物品的七天暂存期",
+    "说明当前文档未提供超过暂存期限后的处置方式",
+    "不能编造丢弃、拍卖或继续保管等处置规定"
+  ]
+},
+{
+  "id": "D06",
+  "document": "data/samples/workshop_notice.txt",
+  "task_type": "summary",
+  "question": "请概括这份活动说明。",
+  "expected_points": [
+    "保留活动时间、地点、面向本校学生及三个活动环节",
+    "保留十六人上限、报名截止时间、确认邮件决定正式名额、候补不保证参加",
+    "保留学生证和手机、提前十分钟签到、电量与存储准备、现场不提供充电，以及拍摄人像和公开发布的同意要求"
+  ]
+},
+{
+  "id": "D07",
+  "document": "data/samples/workshop_notice.txt",
+  "task_type": "extract",
+  "question": "请从这份活动说明中提取：活动时间、活动地点、报名截止时间、正式参与人数上限、主办方联系邮箱的具体地址、报名费用。",
+  "expected_points": [
+    "活动时间为2026年11月7日14:00至17:00",
+    "活动地点为创客楼302教室",
+    "报名截止时间为2026年11月5日18:00",
+    "正式参与人数上限为十六名",
+    "主办方联系邮箱的具体地址未提供，不能用报名者需填写邮箱代替",
+    "报名费用未说明，不能推断为免费"
+  ]
+},
+  {
+  "id": "D08",
+  "document": "data/samples/workshop_notice.txt",
+  "task_type": "qa",
+  "question": "我提交了报名表，还没收到确认邮件。朋友登记了候补，我们都能按时到场，是不是就能直接参加？",
+  "expected_points": [
+    "提交报名表不等于取得正式名额，以确认邮件为准",
+    "候补不保证参加",
+    "按时到场不能替代名额确认"
+  ]
+},
+  {
+  "id": "D09",
+  "document": "data/samples/equipment_loan_notes.txt",
+  "task_type": "qa",
+  "question": "每位学生同时最多可以借几件设备？",
+  "expected_points": [
+    "同时报告第二节两件、第三节三件",
+    "指出冲突",
+    "不能擅自选一个，也不能归纳成两至三件"
+  ]
+},
+  {
+  "id": "D10",
+  "document": "data/samples/equipment_loan_notes.txt",
+  "task_type": "qa",
+  "question": "每件设备可以借几天？只要在到期前联系窗口，就一定能延期吗？",
+  "expected_points": [
+    "每件借用期限五天",
+    "提前联系不保证延期，须工作人员确认",
+    "不能因数量冲突而拒绝回答一致的期限"
+  ]
+},
+  {
+  "id": "D11",
+  "document": "data/samples/equipment_loan_notes.txt",
+  "task_type": "summary",
+  "question": "请概括这份设备借用说明。",
+  "expected_points": [
+    "覆盖办理时间、身份与登记、归还核对和借前检查",
+    "保留五天期限及延期须确认",
+    "明确保留两件与三件的冲突"
+  ]
+},
+  {
+  "id": "D12",
+  "document": "data/samples/equipment_loan_notes.txt",
+  "task_type": "extract",
+  "question": "请从这份设备借用说明中提取：窗口办理时间、每件设备借用期限、延期确认方、最长可延期天数。",
+  "expected_points": [
+    "窗口周一至周五09:00至17:00办理，周末不办理",
+    "每件设备借用期限为五天",
+    "是否允许延期由工作人员确认",
+    "最长延期天数未提供，不能拿借用期限五天代替"
+  ]
+}
+]

@@ -1,0 +1,197 @@
+/* 文档问答页面样式。只在这里集中覆盖少量 Streamlit 样式；
+   选择器优先使用 st.container(key=...) 生成的 st-key-* 类名，其次是 data-testid。 */
+
+:root {
+  --paper: #F7F7F4;
+  --ink: #1F2C33;
+  --muted: #5E6B70;
+  --line: #D9DDD8;
+  --indigo: #2E5A7D;
+  --indigo-wash: #E9EFF3;
+  --ochre: #A8713B;
+  --ochre-line: #D3B48D;
+}
+
+/* 主区留白：上方收紧，底部给固定提问条留出空间 */
+/* 顶部留出 Streamlit 固定页眉（约 60px）的高度，避免状态条被遮住 */
+[data-testid="stMainBlockContainer"] {
+  padding-top: 4.6rem;
+  padding-bottom: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  [data-testid="stMainBlockContainer"] {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* 中文正文行距 */
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] li {
+  line-height: 1.8;
+}
+
+[data-testid="stMarkdownContainer"] li + li {
+  margin-top: 0.2rem;
+}
+
+[data-testid="stMarkdownContainer"] blockquote {
+  border-left: 3px solid var(--ochre-line);
+  color: var(--muted);
+}
+
+[data-testid="stText"] {
+  font-family: inherit;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* 侧栏：当前文档卡 */
+.st-key-document-card [data-testid="stText"] {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.st-key-document-card [data-testid="stCaptionContainer"] {
+  color: var(--muted);
+}
+
+/* 顶部状态条 */
+.st-key-status-bar {
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--line);
+}
+
+/* 用户问题：靛青底色的提问块 */
+[class*="st-key-user-"] [data-testid="stChatMessage"] {
+  background: var(--indigo-wash);
+  border-radius: 14px;
+  padding: 0.85rem 1.1rem;
+}
+
+[class*="st-key-user-"] [data-testid="stText"] {
+  font-weight: 500;
+  font-size: 1.05rem;
+}
+
+/* 助手回答：直接落在纸面上，不加底色 */
+[class*="st-key-assistant-"] [data-testid="stChatMessage"] {
+  background: transparent;
+  padding: 0.4rem 0.2rem 0.2rem;
+}
+
+/* 检索资料：旁注式左侧细线 */
+[class*="st-key-source-"] {
+  border-left: 3px solid var(--ochre-line);
+  padding-left: 0.95rem;
+  margin: 0.25rem 0 0.35rem;
+}
+
+[class*="st-key-source-"] [data-testid="stText"] {
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+[class*="st-key-source-"] [data-testid="stCaptionContainer"] {
+  overflow-wrap: anywhere;
+}
+
+/* 底部提问条：输入框与按钮合成一条 */
+[data-testid="stBottom"] > div {
+  background: linear-gradient(to top, var(--paper) 80%, rgba(247, 247, 244, 0));
+}
+
+.st-key-composer [data-testid="stForm"] {
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.3rem 0.35rem 0.3rem 1rem;
+  box-shadow: 0 8px 28px rgba(31, 44, 51, 0.08);
+}
+
+.st-key-composer [data-testid="stForm"]:focus-within {
+  border-color: var(--indigo);
+  box-shadow: 0 8px 28px rgba(46, 90, 125, 0.14);
+}
+
+.st-key-composer [data-testid="stTextInputRootElement"] {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.st-key-composer [data-testid="stTextInputRootElement"]:focus-within {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.st-key-composer [data-testid="stTextInput"] input {
+  padding-left: 0.2rem;
+  padding-right: 0.2rem;
+}
+
+.st-key-composer [data-testid="stFormSubmitButton"] button {
+  border-radius: 999px;
+  min-height: 2.4rem;
+}
+
+.st-key-composer [data-testid="stCaptionContainer"] {
+  text-align: center;
+  color: var(--muted);
+}
+
+/* 引导面板 */
+.st-key-welcome [data-testid="stHeading"] h2 {
+  letter-spacing: 0.01em;
+}
+
+/* 提取结果卡片 */
+[class*="st-key-extraction-item-"] {
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+}
+
+[class*="st-key-extraction-item-"] [data-testid="stMarkdownContainer"] strong {
+  color: var(--indigo);
+  font-size: 1.05rem;
+}
+
+[class*="st-key-extraction-item-"] [data-testid="stCaptionContainer"] {
+  color: var(--muted);
+  font-weight: 500;
+  min-width: 5rem;
+}
+
+[class*="st-key-extraction-item-"] [data-testid="stText"] {
+  color: var(--ink);
+  line-height: 1.7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* 上传区英文提示改为中文。Streamlit 未提供文案配置，这里只替换显示文字；
+   若将来 Streamlit 结构变化，最多退回英文提示，不影响功能。 */
+[data-testid="stFileUploaderDropzone"] button p {
+  font-size: 0;
+}
+
+[data-testid="stFileUploaderDropzone"] button p::after {
+  content: "选择文件";
+  font-size: 0.9rem;
+}
+
+[data-testid="stFileUploaderDropzoneInstructions"] span {
+  font-size: 0;
+}
+
+[data-testid="stFileUploaderDropzoneInstructions"] span::after {
+  content: "TXT、DOCX 或 PDF，单个文件不超过 200MB";
+  font-size: 0.8rem;
+}

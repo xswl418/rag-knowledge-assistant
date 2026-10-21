@@ -1,7 +1,5 @@
 from pathlib import Path
-from typing import overload
-
-import rag
+from rag_assistant import rag
 
 
 if __name__ == "__main__":

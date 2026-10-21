@@ -4,10 +4,39 @@ from scripts.analyze_logs import load_records
 BASE_DIR = Path(__file__).resolve().parent.parent
 LOG_PATH = BASE_DIR / "logs" / "agent_logs.jsonl"
 
+def calculate_model_seconds(record):
+    timings = record.get("model_timings")
+
+    if timings is None:
+        return None
+
+    model_seconds = 0.0
+
+    for timing in timings:
+        model_seconds += timing["seconds"]
+
+    return model_seconds
+
 
 def main():
     records = load_records(LOG_PATH)
     print("Agent任务记录数：", len(records))
+
+    if records :
+        latest_record = records[-1]
+        model_seconds = calculate_model_seconds(latest_record)
+        total_seconds = latest_record.get("total_seconds")
+
+        if model_seconds is None:
+            print("最近一次任务没有模型记时记录")
+        elif total_seconds is None:
+            print("最近一次任务没有总耗时记录")
+        else:
+            other_seconds = total_seconds - model_seconds
+
+            print(f"最近一次任务总耗时：{total_seconds:.3f}秒")
+            print(f"模型请求总耗时：{model_seconds:.3f}秒")
+            print(f"任务内其余耗时：{other_seconds:.3f}秒")
 
     tool_record_count = 0
     tool_call_total = 0

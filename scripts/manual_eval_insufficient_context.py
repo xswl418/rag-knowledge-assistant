@@ -2,10 +2,9 @@
 
 from unittest.mock import patch
 
-from openai import OpenAI
+from rag_assistant.api_client import create_api_client
 
-import rag
-import agent
+from rag_assistant import rag, agent
 
 
 QUESTION = "RAG 的检索相似度阈值应该设置为多少？"
@@ -42,7 +41,7 @@ def main():
     print("相似度为 None：本次没有计算相似度。")
     print("通过标准：说明资料不足，不提供无依据的阈值或设置建议。")
 
-    with OpenAI(timeout=30.0, max_retries=0) as client:
+    with create_api_client() as client:
         with patch.dict(agent.available_tools, {"search_knowledge": fixed_search}):
             record = agent.run_agent(
                 question=QUESTION,
