@@ -242,13 +242,11 @@ def build_sentence_chunks(text, max_chunk_size, overlap=0):
         if len(current_chunk) +len(sentence) > max_chunk_size:
             chunks.append(current_chunk)
 
-            last_sentence = split_sentences(current_chunk)[-1]
+            last_size = max_chunk_size - len(sentence)
+            actual_size = min(overlap, last_size, len(current_chunk))
 
-            if (
-                len(last_sentence) <= overlap
-                and len(last_sentence) + len(sentence) <= max_chunk_size
-            ):
-                current_chunk = last_sentence
+            if actual_size > 0:
+                current_chunk = current_chunk[-actual_size:]
             else:
                 current_chunk = ""
 
