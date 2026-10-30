@@ -439,6 +439,25 @@ def run_agent(
                 messages.append(tool_result_message)
                 continue
 
+            elif results[0].get("low_confidence"):
+                tool_result_message = {
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": json.dumps(
+                        {
+                            "results": results,
+                            "message": "结果相似度低于阈值，可能不相关；如果不能回答问题且还有检索次数，换个问法再调用search_knowledge，否则说明资料不足。",
+                            "remaining_search_calls": max_search_calls - search_call_count,
+                        },
+                        ensure_ascii=False,
+                    ),
+                }
+
+                print("准备回传的工具消息：", tool_result_message)
+
+                messages.append(tool_result_message)
+                continue
+
             else:
                 tool_result_message = {
                     "role": "tool",

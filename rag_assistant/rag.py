@@ -378,9 +378,14 @@ def retrieve_top_k(question, chunks, vectors, model, top_k, minimum_score):
 
     results = []
 
-    for item in scored_chunks[:top_k]:
-        if item["score"]>=minimum_score:
-            results.append(item)
+    if scored_chunks[0]["score"] < minimum_score:
+        results = [{**scored_chunks[0], "low_confidence": True}]
+    else:
+        for item in scored_chunks[:top_k]:
+            if item["score"]>=minimum_score:
+                results.append(item)
+
+
 
     search_seconds = time.perf_counter() - search_start
     print(f"相似度计算与筛选耗时：{search_seconds:.3f}秒")
