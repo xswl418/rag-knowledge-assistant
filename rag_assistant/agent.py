@@ -30,6 +30,24 @@ from httpx import TransportError
 
 AGENT_LOG_PATH = rag.BASE_DIR / "logs" / "agent_logs.jsonl"
 
+def build_search_content(results, remaining_search_calls):
+    if not results:
+        return {
+            "results": [],
+            "message": "本次检索为空。请围绕用户原始问题换一种问法，再调用 search_knowledge,不要重复原查询。",
+            "remaining_search_calls": remaining_search_calls,
+        }
+    elif results[0].get("low_confidence"):
+        return {
+            "results": results,
+            "message": "结果相似度低于阈值，可能不相关；如果不能回答问题且还有检索次数，换个问法再调用search_knowledge，否则说明资料不足。",
+            "remaining_search_calls": remaining_search_calls,
+        }
+    else:
+        return results
+
+
+
 def run_agent(
         question,
         client,
@@ -423,51 +441,14 @@ def run_agent(
                     print("已检索三次，仍未找到相关资料，本次处理结束。")
                     break
 
-                tool_result_message = {
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": json.dumps(
-                        {
-                            "results": [],
-                            "message": "本次检索为空。请围绕用户原始问题换一种问法，再调用 search_knowledge,不要重复原查询。",
-                            "remaining_search_calls": max_search_calls - search_call_count,
-                        },
-                        ensure_ascii=False,
-                    ),
-                }
+            tool_result_message = {
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": json.dumps(build_search_content(results, remaining_search_calls=max_search_calls-search_call_count),
+                ensure_ascii=False)
+            }
 
-                messages.append(tool_result_message)
-                continue
-
-            elif results[0].get("low_confidence"):
-                tool_result_message = {
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": json.dumps(
-                        {
-                            "results": results,
-                            "message": "结果相似度低于阈值，可能不相关；如果不能回答问题且还有检索次数，换个问法再调用search_knowledge，否则说明资料不足。",
-                            "remaining_search_calls": max_search_calls - search_call_count,
-                        },
-                        ensure_ascii=False,
-                    ),
-                }
-
-                print("准备回传的工具消息：", tool_result_message)
-
-                messages.append(tool_result_message)
-                continue
-
-            else:
-                tool_result_message = {
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": json.dumps(results, ensure_ascii=False)
-                }
-
-                print("准备回传的工具消息：", tool_result_message)
-
-                messages.append(tool_result_message)
+            messages.append(tool_result_message)
 
     total_seconds = time.perf_counter() - task_start
     print(f"本次任务耗时：{total_seconds:.3f}秒")
