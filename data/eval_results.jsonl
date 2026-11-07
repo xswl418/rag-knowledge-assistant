@@ -1,0 +1,6 @@
+{"method": "vector", "recall@3": 0.95, "mrr": 0.95, "hits": 38, "total": 40}
+{"method": "vector", "recall@3": 0.95, "mrr": 0.95, "hits": 38, "total": 40}
+{"method": "bm25", "recall@3": 0.925, "mrr": 0.85, "hits": 37, "total": 40}
+{"method": "vector", "recall@3": 0.95, "mrr": 0.95, "hits": 38, "total": 40}
+{"method": "bm25", "recall@3": 0.925, "mrr": 0.85, "hits": 37, "total": 40}
+{"method": "rrf", "recall@3": 1.0, "mrr": 0.95, "hits": 40, "total": 40}

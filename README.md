@@ -1,7 +1,7 @@
 # 文档问答与分析 Agent
 
 上传一份文档，用自然语言查询条款、概括全文或提取指定字段，并回到来源核对结果。
-项目基于 Python、Streamlit 和支持工具调用的 Chat Completions 兼容接口，提供网页和命令行入口。
+项目基于 Python、Streamlit 和支持工具调用的 Chat Completions 兼容接口，提供网页、命令行和固定样例的本地HTTP API入口。
 
 在线体验：<https://rag-knowledge-assistant-kufyplzg5amhfd3sxyc5rt.streamlit.app/>
 
@@ -97,6 +97,18 @@ Windows 也可双击根目录的 `start_web.bat`，它使用项目 `.venv` 启�
 首次检索为空时允许模型改写查询；第三次仍为空则停止。预算或接口异常也可能提前终止任务。
 概括与提取会先检查完整计划所需预算，不会为了完成而静默截掉后续批次。
 
+## 检索评测
+
+使用 40 道人工标注问题（基于 `data/samples/library_guide.txt`），评测指标为 Recall@3 和 MRR：
+
+| 方法 | Recall@3 | MRR | 命中数 |
+| --- | --- | --- | --- |
+| 向量检索（bge-small-zh-v1.5） | 0.950 | 0.950 | 38/40 |
+| BM25（rank-bm25 + jieba） | 0.925 | 0.850 | 37/40 |
+| RRF 融合（向量 + BM25） | **1.000** | **0.950** | **40/40** |
+
+RRF 融合补上了向量检索和 BM25 各自漏掉的题目。评测脚本见 `scripts/evaluate_retrieval.py`，标注数据见 `data/eval_questions.jsonl`。
+
 - 一次处理一份文档；尚不支持 OCR、跨文档联合检索或持久化向量库。
 - DOCX 主要读取正文段落与标题样式；PDF 读取已有文字层，扫描件、复杂排版、表格及图像内容不在可靠解析范围内。
 - 向量阈值和切块参数不是通用最优值。检索可能漏掉依据或带入无关片段，生成内容仍需核对。
@@ -111,6 +123,8 @@ Windows 也可双击根目录的 `start_web.bat`，它使用项目 `.venv` 启�
 `logs/` 可能包含问题、完整回答和原文片段，不是匿名统计。密钥、日志、虚拟环境和本地模型目录均被 Git 忽略；云端实例本地日志不作为长期存储。
 
 ## 其他入口
+
+本地HTTP API支持固定样例问答、SQLite结果保存和按编号/状态查询，使用独立的`requirements-api.txt`安装清单；配置、启动和协议见[HTTP API说明](docs/api.md)。
 
 ```powershell
 # 命令行 Agent：按提示选择一个 TXT、DOCX 或 PDF，输入 exit 退出
@@ -140,7 +154,9 @@ rag-knowledge-assistant/
 ├── data/                 # 评测用例和虚构样例文档
 ├── docs/                 # 架构、测试、数据来源和部署说明
 ├── .streamlit/           # 网页主题配置
+├── api_app.py            # 固定样例HTTP API与SQLite任务保存查询
 ├── requirements.txt
+├── requirements-api.txt
 ├── start_web.bat
 ├── CHANGELOG.md
 └── README.md
@@ -152,6 +168,7 @@ rag-knowledge-assistant/
 - [开发演进](CHANGELOG.md)：历史提交、功能变化与验证边界。
 - [设计与验证记录](docs/development.md)：近期迭代的问题、方案、修复和验证依据。
 - [架构说明](docs/architecture.md)：请求链路、模块职责与数据路径。
+- [HTTP API说明](docs/api.md)：本地API依赖、资源准备、启动、任务保存与查询。
 - [测试与评测](docs/testing.md)：离线回归与真实模型评测的区别。
 - [样例与来源](docs/sample_data.md)：测试文档用途和知识库参考来源。
 - [Community Cloud 部署](docs/community_cloud.md)：仓库入口、Secrets 配置、冷启动说明和上线核验清单。

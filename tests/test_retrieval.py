@@ -31,9 +31,8 @@ class TestRetrieval(unittest.TestCase):
         model = DefineEncode()
 
         actual = retrieve_top_k(question, chunks, vectors, model, top_k, minimum_score)
-
-        self.assertNotIn("low_confidence", actual[-1])
         self.assertEqual(len(actual), 1)
+        self.assertNotIn("low_confidence", actual[0])
         self.assertEqual(actual[0]["chunk"]["content"], "C")
         self.assertAlmostEqual(actual[0]["score"], 0.8, places=5)
 

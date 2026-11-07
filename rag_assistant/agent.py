@@ -1,6 +1,7 @@
 from rag_assistant import rag
 import json
 import time
+import logging
 
 from pypdf.errors import PdfReadError
 from zipfile import BadZipFile
@@ -28,6 +29,8 @@ from rag_assistant.streaming import collect_stream_response
 from openai.types.chat import ChatCompletionMessage
 from httpx import TransportError
 
+logger = logging.getLogger(__name__)
+
 AGENT_LOG_PATH = rag.BASE_DIR / "logs" / "agent_logs.jsonl"
 
 def build_search_content(results, remaining_search_calls):
@@ -47,6 +50,83 @@ def build_search_content(results, remaining_search_calls):
         return results
 
 
+def call_llm_with_retry(client, messages, tool_definitions, tool_choice, on_text=None, max_retries=3):
+    """
+    调用大模型 API，支持重试。
+
+    参数：
+        client: OpenAI 客户端
+        messages: 对话历史
+        tool_definitions: 工具定义
+        tool_choice: 工具选择策略
+        on_text: 文本流式回调函数
+        max_retries: 最大重试次数（默认3次）
+
+    返回：
+        (success, result, error_info)
+        - success: bool，是否成功
+        - result: 成功时返回 stream_result，失败时为 None
+        - error_info: 失败时返回错误信息字典，成功时为 None
+                     {"status": "api_error", "message": "..."}
+    """
+    for retry_count in range(max_retries):
+        try:
+            with client.chat.completions.create(
+                    model=rag.LLM_MODEL_NAME,
+                    messages=messages,
+                    tools=tool_definitions,
+                    tool_choice=tool_choice,
+                    stream=True,
+            ) as stream:
+                stream_result = collect_stream_response(
+                    stream,
+                    on_text=on_text,
+                )
+            # 成功：返回结果
+            return (True, stream_result, None)
+
+        except (APITimeoutError, APIConnectionError, RateLimitError) as e:
+            error_type = type(e).__name__
+            logger.warning(f"可重试的错误：%s，等待后重试...")
+            if retry_count < max_retries - 1:  # 还有重试机会
+                time.sleep(2 ** retry_count)
+                continue
+            else:  # 重试耗尽
+                return (False, None, {
+                    "status": "api_error",
+                    "message": f"重试{max_retries}次后仍失败：{error_type}"
+                })
+
+        except APIStatusError as error:
+            if error.status_code >= 500:
+                logger.warning(f"服务端错误 %d，等待后重试...")
+                if retry_count < max_retries - 1:
+                    time.sleep(2 ** retry_count)
+                    continue
+                else:
+                    return (False, None, {
+                        "status": "api_error",
+                        "message": f"重试{max_retries}次后仍失败：HTTP {error.status_code}"
+                    })
+            else:  # 4xx 客户端错误，不重试
+                return (False, None, {
+                    "status": "api_error",
+                    "message": f"客户端错误，不可重试：HTTP {error.status_code}"
+                })
+
+        except (APIError, TransportError, AuthenticationError) as e:
+            error_type = type(e).__name__
+            return (False, None, {
+                "status": "api_error",
+                "message": f"不可重试的错误：{error_type}"
+            })
+
+    # 理论上不会到这里，但为了安全
+    return (False, None, {
+        "status": "api_error",
+        "message": "未知错误：重试逻辑异常退出"
+    })
+
 
 def run_agent(
         question,
@@ -59,6 +139,7 @@ def run_agent(
         on_summary_progress=None,
         on_text=None,
         on_extraction_progress=None,
+        task_id: int | None = None,
 ):
     task_start = time.perf_counter()
     messages = [
@@ -138,54 +219,26 @@ def run_agent(
                 "type": "function",
                 "function": {"name": "search_knowledge"},
             }
-        try:
-            with client.chat.completions.create(
-                    model=rag.LLM_MODEL_NAME,
-                    messages=messages,
-                    tools=tool_definitions,
-                    tool_choice=tool_choice,
-                    stream=True,
-            ) as stream:
-                stream_result = collect_stream_response(
-                    stream,
-                    on_text=on_text,
-                )
-        except APITimeoutError:
-            status = "api_error"
-            task_error = "模型接口请求超时（APITimeoutError）。"
-            print(task_error)
-            break
-        except APIConnectionError:
-            status = "api_error"
-            task_error = "无法连接模型接口，请检查网络、代理和接口地址。"
-            print(task_error)
-            break
-        except AuthenticationError:
-            status = "api_error"
-            task_error = "模型接口鉴权失败，请检查密钥及其对应的接口地址。"
-            print(task_error)
-            break
-        except RateLimitError:
-            status = "api_error"
-            task_error = "模型接口触发调用限制，请检查请求频率、额度或服务商限制。"
-            print(task_error)
-            break
-        except APIStatusError as error:
-            status = "api_error"
-            task_error = f"模型接口返回错误，HTTP状态码：{error.status_code}。"
-            print(task_error)
-            break
-        except (APIError, TransportError):
-            status = "api_error"
-            task_error = "模型请求或流式接收失败，本次结果不作为完整回答。"
+        success, stream_result, error_info = call_llm_with_retry(
+            client=client,
+            messages=messages,
+            tool_definitions=tool_definitions,
+            tool_choice=tool_choice,
+            on_text=on_text,
+        )
+
+        model_timings.append({
+            "stage": "agent_model",
+            "seconds": time.perf_counter() - model_start,
+        })
+
+        if not success:
+            status = error_info["status"]
+            task_error = error_info["message"]
             print(task_error)
             break
 
-        finally:
-            model_timings.append({
-                "stage": "agent_model",
-                "seconds": time.perf_counter() - model_start,
-            })
+
 
         expected_reason = (
             "tool_calls" if stream_result["tool_calls"] else "stop"
@@ -456,6 +509,7 @@ def run_agent(
     print("本次结束状态：", status)
 
     record = {
+        "task_id": task_id,
         "question": question,
         "status": status,
         "answer": final_answer,
@@ -470,7 +524,7 @@ def run_agent(
         "summary_input": summary_input,
         "extraction_fields": extraction_fields,
         "extraction_result":extraction_result,
-        "extraction_input": extraction_input,
+        "extraction_input": extraction_input
     }
 
     return record

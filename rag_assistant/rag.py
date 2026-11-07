@@ -385,8 +385,6 @@ def retrieve_top_k(question, chunks, vectors, model, top_k, minimum_score):
             if item["score"]>=minimum_score:
                 results.append(item)
 
-
-
     search_seconds = time.perf_counter() - search_start
     print(f"相似度计算与筛选耗时：{search_seconds:.3f}秒")
 

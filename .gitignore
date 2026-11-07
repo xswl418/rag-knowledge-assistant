@@ -12,3 +12,8 @@ __pycache__/
 /logs/
 .venv-deploy-check/
 /models/
+/data/api_tasks.db
+/data/api_tasks.db-journal
+/data/api_tasks.db-wal
+/data/api_tasks.db-shm
+/practices/
